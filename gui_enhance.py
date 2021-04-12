@@ -22,10 +22,10 @@ def open_image():
     image_shape = image.shape
     if(image_shape[0]/image_shape[1]>image_shape[1]/image_shape[0]):
         resize_x = frame_image_heigth
-        resize_y = frame_image_heigth*resize_y/image_shape[0]
+        resize_y = int(frame_image_heigth*resize_y/image_shape[0])
     else:
-        resize_x = frame_image_width*resize_x/image_shape[1]
         resize_y = frame_image_width
+        resize_x = int(frame_image_width*resize_y/image_shape[1])
     image_re = cv2.resize(image,(resize_x,resize_y))
     cv2.imwrite('tmp.jpg',image_re)
     #image_re = cv2.resize(image,(frame_image_width,frame_image_heigth))
@@ -287,11 +287,12 @@ image = cv2.imread("01.jpg")
 print(image.shape)
 image_shape = image.shape
 if(image_shape[0]/image_shape[1]>image_shape[1]/image_shape[0]):
-    resize_x = frame_image_heigth
-    resize_y = frame_image_heigth*resize_y/image_shape[0]
+    resize_y = frame_image_heigth
+    resize_x = int(image_shape[1]*resize_y/image_shape[0])
 else:
-    resize_x = frame_image_width*resize_x/image_shape[1]
-    resize_y = frame_image_width
+    resize_x = frame_image_width
+    resize_y = int(image_shape[0]*resize_x/image_shape[1])
+print((resize_x,resize_y))
 image_re = cv2.resize(image,(resize_x,resize_y))
 img = Image.fromarray(cv2.cvtColor(image_re,cv2.COLOR_BGR2RGB))
 
