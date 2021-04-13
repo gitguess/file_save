@@ -71,8 +71,58 @@ def dehaze_dark_channel():
     cv2.waitKey(0)
 
 
-def process():
-    pass
+def calcGrayHist(I):
+    # 计算灰度直方图
+    h, w = I.shape[:2]
+    grayHist = np.zeros([256], np.uint64)
+    for i in range(h):
+        for j in range(w):
+            grayHist[I[i][j]] += 1
+    return grayHist
+
+
+def equalHist():
+    PATH_IMG_FILE = 'tmp.jpg'
+    img = cv.imread(PATH_IMG_FILE, 0)
+    # 灰度图像矩阵的高、宽
+    h, w = img.shape
+    # 第一步：计算灰度直方图
+    grayHist = calcGrayHist(img)
+    # 第二步：计算累加灰度直方图
+    zeroCumuMoment = np.zeros([256], np.uint32)
+    for p in range(256):
+        if p == 0:
+            zeroCumuMoment[p] = grayHist[0]
+        else:
+            zeroCumuMoment[p] = zeroCumuMoment[p - 1] + grayHist[p]
+    # 第三步：根据累加灰度直方图得到输入灰度级和输出灰度级之间的映射关系
+    outPut_q = np.zeros([256], np.uint8)
+    cofficient = 256.0 / (h * w)
+    for p in range(256):
+        q = cofficient * float(zeroCumuMoment[p]) - 1
+        if q >= 0:
+            outPut_q[p] = math.floor(q)
+        else:
+            outPut_q[p] = 0
+    # 第四步：得到直方图均衡化后的图像
+    equalHistImage = np.zeros(img.shape, np.uint8)
+    for i in range(h):
+        for j in range(w):
+            equalHistImage[i][j] = outPut_q[img[i][j]]
+    cv.imshow(" equalizeHist", equalHistImage)
+    cv.waitKey(0)
+
+def gamma():
+    PATH_IMG_FILE = 'tmp.jpg'
+    img = cv.imread(PATH_IMG_FILE, 0)
+    # 图像归一化
+    fi = img / 255.0
+    # 伽马变换
+    gamma = 0.4
+    out = np.power(fi, gamma)
+    cv.imshow("img", img)
+    cv.imshow("gama", out)
+    cv.waitKey(0)
 
 
 
@@ -284,7 +334,7 @@ main_frame = tkinter.Frame(window, width=1024, height=600, bg="lightblue")
 frame_image = tkinter.Frame(main_frame, bg="lightblue", width = frame_image_width, height = frame_image_heigth)
 
 image = cv2.imread("01.jpg")
-print(image.shape)
+#print(image.shape)
 image_shape = image.shape
 if(image_shape[0]/image_shape[1]>image_shape[1]/image_shape[0]):
     resize_y = frame_image_heigth
@@ -292,7 +342,7 @@ if(image_shape[0]/image_shape[1]>image_shape[1]/image_shape[0]):
 else:
     resize_x = frame_image_width
     resize_y = int(image_shape[0]*resize_x/image_shape[1])
-print((resize_x,resize_y))
+#print((resize_x,resize_y))
 image_re = cv2.resize(image,(resize_x,resize_y))
 img = Image.fromarray(cv2.cvtColor(image_re,cv2.COLOR_BGR2RGB))
 
@@ -316,6 +366,10 @@ processButton = tkinter.Button(frame_fuction_button, text='retinex-MSRCR', comma
 processButton.place(x=20,y=120)
 processButton = tkinter.Button(frame_fuction_button, text='dehaze-dark-channel', command = dehaze_dark_channel, font=('Arial', 12,'bold'), width=18, height=1)
 processButton.place(x=20,y=160)
+processButton = tkinter.Button(frame_fuction_button, text=' equalizeHist', command = equalHist, font=('Arial', 12,'bold'), width=18, height=1)
+processButton.place(x=20,y=200)
+processButton = tkinter.Button(frame_fuction_button, text='gamma', command = gamma, font=('Arial', 12,'bold'), width=18, height=1)
+processButton.place(x=20,y=240)
 
 
 
